@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo "Middleware Heroku Agent Installation" && exit 0

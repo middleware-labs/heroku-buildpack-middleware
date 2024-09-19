@@ -1,0 +1,14 @@
+# Buildpack API version
+api = "0.9"
+
+# Buildpack ID and metadata
+[buildpack]
+id = "middleware-labs/mw-agent-buildpack"
+version = "1.7.6"
+
+# Targets the buildpack will work with
+[[targets]]
+os = "linux"
+
+[[stacks]]
+id = "heroku-20"
