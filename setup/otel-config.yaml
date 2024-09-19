@@ -1,9 +1,3 @@
-config_sources:
-  env:
-    defaults:
-      HEROKU_DYNO_ID: "unset"
-      HEROKU_APP_ID: "unset"
-      HEROKU_APP_NAME: "unset"
 exporters:
   logging:
     loglevel: debug
@@ -15,7 +9,44 @@ exporters:
       enabled: true
       num_consumers: 100
       queue_size: 10000
+extensions:
+  health_check: {}
 processors:
+  attributes/logs:
+    actions:
+    - action: upsert
+      from_attribute: name
+      key: source
+    - action: upsert
+      from_attribute: operator_type
+      key: source
+    - action: upsert
+      from_attribute: log.file.name
+      key: source
+    - action: upsert
+      from_attribute: fluent.tag
+      key: source
+    - action: upsert
+      from_attribute: service.name
+      key: source
+    - action: upsert
+      from_attribute: project.name
+      key: source
+    - action: upsert
+      from_attribute: serviceName
+      key: source
+    - action: upsert
+      from_attribute: projectName
+      key: source
+    - action: upsert
+      from_attribute: pod_name
+      key: source
+    - action: upsert
+      from_attribute: container_name
+      key: source
+    - action: upsert
+      from_attribute: namespace
+      key: source
   attributes/traces:
     actions:
     - action: insert
@@ -33,15 +64,6 @@ processors:
     - action: insert
       from_attribute: faas.trigger
       key: mw.service.name.derived
-    - action: insert
-      key: dyno_id
-      value: ${env:HEROKU_DYNO_ID}
-    - action: insert
-      key: app_id
-      value: ${env:HEROKU_APP_ID}
-    - action: insert
-      key: app_name
-      value: ${env:HEROKU_APP_NAME}
   batch: null
   cumulativetodelta/ratecalculation:
     include:
@@ -61,24 +83,36 @@ processors:
     - system.network.packets.rate
     - system.network.errors.rate
     - system.network.dropped.rate
-  resource:
+  resource/metrics:
     attributes:
     - action: upsert
       key: mw.account_key
       value: ${MW_API_KEY}
     - action: insert
-      from_attribute: host.name
-      key: host.id
+      key: mw.host.tags
+      value: ${MW_HOST_TAGS}
+    - action: upsert
+      from_attribute: service.name
+      key: heroku.service.name
     - action: delete
-      key: host.name
+      key: service.name
   resource/hostid:
     attributes:
     - action: upsert
       from_attribute: host.name
       key: host.id
+  resource/logs:
+    attributes:
     - action: upsert
-      key: os.type
-      value: darwin
+      key: mw.account_key
+      value: ${MW_API_KEY}
+    - action: delete
+      key: host.name
+  resource/servicenamefromhostname:
+    attributes:
+    - action: insert
+      from_attribute: host.name
+      key: service.name
   resource/traces:
     attributes:
     - action: upsert
@@ -89,14 +123,21 @@ processors:
   resourcedetection:
     detectors:
     - env
-    - ec2
+    - heroku
     - system
-    - docker
     override: false
     system:
       hostname_sources:
       - os
     timeout: 5s
+  transform/copyservicefromlogattributes:
+    error_mode: ignore
+    log_statements:
+    - context: log
+      statements:
+      - set(resource.attributes["service.name"], attributes["service.name"]) where
+        attributes["service.name"] != nil and resource.attributes["service.name"]
+        == nil
   transform/ratecalculation/copymetric:
     error_mode: ignore
     metric_statements:
@@ -119,21 +160,6 @@ processors:
       - convert_sum_to_gauge() where metric.name == "system.network.packets"
       - convert_sum_to_gauge() where metric.name == "system.network.errors"
       - convert_sum_to_gauge() where metric.name == "system.network.dropped"
-  metricstransform/heroku:
-    transforms:
-    - include: .*
-      match_type: regexp
-      action: update
-      operations:
-        - action: add_label
-          new_label: dynoid
-          new_value: ${env:HEROKU_DYNO_ID}
-        - action: add_label
-          new_label: appid
-          new_value: ${env:HEROKU_APP_ID}
-        - action: add_label
-          new_label: appname
-          new_value: ${env:HEROKU_APP_NAME}
 receivers:
   fluentforward:
     endpoint: 0.0.0.0:8006
@@ -187,23 +213,37 @@ receivers:
         - targets:
           - 127.0.0.1:${MW_AGENT_INTERNAL_METRICS_PORT}
 service:
+  extensions:
+  - health_check
   pipelines:
+    logs:
+      exporters:
+      - otlp/2
+      processors:
+      - resource/logs
+      - resourcedetection
+      - resource/servicenamefromhostname
+      - resource/hostid
+      - attributes/logs
+      - transform/copyservicefromlogattributes
+      - batch
+      receivers:
+      - otlp
+      - fluentforward
     metrics:
       exporters:
       - otlp/2
       processors:
-      - resource
       - resourcedetection
       - resource/hostid
+      - resource/metrics
       - transform/ratecalculation/copymetric
       - cumulativetodelta/ratecalculation
       - deltatorate/ratecalculation
       - transform/ratecalculation/sumtogauge
-      - metricstransform/heroku
       - batch
       receivers:
       - hostmetrics
-      - docker_stats
       - otlp
       - prometheus
     traces:
