@@ -7,7 +7,7 @@
 
 The Heroku buildpack for Middleware is a [buildpack](https://devcenter.heroku.com/articles/buildpacks) for the
 [Middleware Agent (mw-agent)](https://github.com/middleware-labs/mw-agent). The buildpack to
-installs and runs the mw-agent on a Dyno to receive,
+installs and runs `mw-agent` on a Heroku Dyno to receive,
 process and export metric and trace data to [Middleware Observability platform](https://middleware.io).
 
 To collect custom application metrics or traces, include the language appropriate [Middleware APM package](https://docs.middleware.io/apm-configuration/apm_overview) in your application.
@@ -68,9 +68,9 @@ git push heroku main
 heroku logs -a <app-name> --tail
 ```
 
-`mw-agent` is installed by default at `/app/mw-agent` directory and is automatically started on every dyno start. 
+`mw-agent` is installed by default at `/app/mw-agent` directory and is automatically started on every Dyno start. 
 
-`mw-agent` provides local OpenTelemetry endpoints on port 9313 for gRPC and 9320 for HTTP. It also provides a local fluentforward endpoint on port 8006.
+`mw-agent` provides local OpenTelemetry endpoints on port `9313` for gRPC and `9320` for HTTP. It also provides a local fluentforward endpoint on port `8006`.
 
 ## Buildpack Ordering
 
@@ -155,7 +155,7 @@ Dyno metadata can be enabled using command below
 heroku labs:enable runtime-dyno-metadata -a <app name>
 ```
 
-Heroku buildpack for Middleware relies on `HEROKU_APP_NAME` environment variable obtained through Dyno metadata to update Dyno hostname.
+Heroku buildpack for Middleware relies on `HEROKU_APP_NAME` environment variable obtained through Dyno metadata to update the Dyno hostname.
 
 ## Preexec Script
 
@@ -200,7 +200,7 @@ fi
 
 By default, the buildpack collects system metrics for the host machine running your Dyno.  To disable host system metrics collection, set the `MW_AGENT_FEATURES_METRIC_COLLECTION` environment variable to `false` in your Heroku application configuration.
 
-**Note**: System metrics are not available for individual Dynos by enabling [log-runtime-metrics](https://devcenter.heroku.com/articles/log-runtime-metrics) is not supported.
+**Note**: System metrics are for not available individual Dynos in Heroku. [log-runtime-metrics](https://devcenter.heroku.com/articles/log-runtime-metrics) is not supported by the buildpack.
 
 ## Traces
 
@@ -208,7 +208,7 @@ Applications running on Dyno can use language specific [Middleware APM packages]
 
 ## Logs
 
-Logs for applications running on Heroku Dynos can be collected using [Middleware's Heroku Log Drains]() integration.
+Logs for applications running on Heroku Dynos can be collected using [Middleware's Heroku Log Drains](https://docs.middleware.io/integrations/heroku-log-drains) integration.
 
 ## Troubleshooting
 
