@@ -40,15 +40,17 @@ log "Downloading Middleware Agent..."
 wget -q -O "$BUILD_DIR/mw-agent.deb" "$AGENT_URL"
 dpkg -x "$BUILD_DIR/mw-agent.deb" "$MW_AGENT_DIR"
 
+cp  "$MW_AGENT_DIR/opt/mw-agent/bin/mw-agent" "$MW_AGENT_DIR/mw-agent"
+
 # Remove the downloaded deb file and unnecessary files
 rm "$BUILD_DIR/mw-agent.deb"
-rm -f "$MW_AGENT_DIR/etc/mw-agent/agent-config.yaml.sample"
-rm -f "$MW_AGENT_DIR/etc/mw-agent/otel-config.yaml.sample"
-rm -fr "$MW_AGENT_DIR/lib" 
+rm -fr "$MW_AGENT_DIR/etc/"
+rm -fr "$MW_AGENT_DIR/opt/"
+rm -fr "$MW_AGENT_DIR/lib/"
 
 # Write launch instructions into profile.d to run mw-agent in the background
 echo "-----> Configuring mw-agent to run in the background"
 mkdir -p "$BUILD_DIR/.profile.d"
-cp "$BUILDPACK_DIR/setup/otel-config.yaml" "$MW_AGENT_DIR/etc/mw-agent/otel-config.yaml"
+cp "$BUILDPACK_DIR/setup/otel-config.yaml" "$MW_AGENT_DIR/otel-config.yaml"
 cp "$BUILDPACK_DIR/setup/mw-agent.sh" "$BUILD_DIR/.profile.d/"
 chmod +x "$BUILD_DIR/.profile.d/mw-agent.sh"

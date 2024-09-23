@@ -162,7 +162,7 @@ processors:
       - convert_sum_to_gauge() where metric.name == "system.network.dropped"
 receivers:
   fluentforward:
-    endpoint: 0.0.0.0:8006
+    endpoint: 127.0.0.1:8006
   hostmetrics:
     collection_interval: 5s
     scrapers:
@@ -201,9 +201,9 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:9319
+        endpoint: 127.0.0.1:9319
       http:
-        endpoint: 0.0.0.0:9320
+        endpoint: 127.0.0.1:9320
   prometheus:
     config:
       scrape_configs:

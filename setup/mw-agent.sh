@@ -1,8 +1,22 @@
 #!/bin/bash
 
-if [ "$DYNOTYPE" == "run" ]; then
-    exit 0
+# By default, the mw-agent will be enabled
+if [ -z "$MW_DYNO_DISABLE_AGENT" ]; then
+    export MW_DYNO_DISABLE_AGENT="false"
 fi
+
+# If preexec script exists, run it
+if [ -f "$MW_DYNO_PREEXEC_SCRIPT" ]; then
+    echo "Running mw-agent dyno preexec script..." 
+    source $MW_DYNO_PREEXEC_SCRIPT
+fi
+
+# If mw-agent is disabled, exit
+if [ "$MW_DYNO_DISABLE_AGENT" == "true" ]; then
+    echo "mw-agent is disabled. Exiting..." 
+    return
+fi
+
 MW_AGENT_DIR="$HOME/mw-agent"
 if [ -z "$MW_FETCH_ACCOUNT_OTEL_CONFIG" ]; then
     export MW_FETCH_ACCOUNT_OTEL_CONFIG=false
@@ -10,5 +24,10 @@ fi
 if [ "$MW_DYNO_HOSTNAME" == "true" ]; then
     export OTEL_RESOURCE_ATTRIBUTES="host.name=${HEROKU_APP_NAME}.${DYNO}"
 fi
-echo "Starting mw-agent in the background..."
-nohup $MW_AGENT_DIR/opt/mw-agent/bin/mw-agent start --otel-config-file=$MW_AGENT_DIR/etc/mw-agent/otel-config.yaml > $MW_AGENT_DIR/mw-agent.log &
+
+if [ -z "$MW_LOGFILE" ]; then
+    export MW_LOGFILE="$MW_AGENT_DIR/mw-agent.log"
+fi
+
+echo "Starting mw-agent in the background..." 
+nohup $MW_AGENT_DIR/mw-agent start --otel-config-file=$MW_AGENT_DIR/otel-config.yaml --logfile $MW_LOGFILE &
