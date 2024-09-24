@@ -21,12 +21,25 @@ MW_AGENT_DIR="$HOME/mw-agent"
 if [ -z "$MW_FETCH_ACCOUNT_OTEL_CONFIG" ]; then
     export MW_FETCH_ACCOUNT_OTEL_CONFIG=false
 fi
-if [ "$MW_DYNO_HOSTNAME" == "true" ]; then
+
+if [ -n "$MW_DYNO_HOSTNAME" ] && [ "$MW_DYNO_HOSTNAME" == "true" ]; then
     export OTEL_RESOURCE_ATTRIBUTES="host.name=${HEROKU_APP_NAME}.${DYNO}"
 fi
 
 if [ -z "$MW_LOGFILE" ]; then
     export MW_LOGFILE="$MW_AGENT_DIR/mw-agent.log"
+fi
+
+if [ -z "$OTEL_EXPORTER_OTLP_ENDPOINT" ]; then
+    export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:9320"
+fi
+
+if [ -z "$OTEL_SERVICE_NAME" ]; then
+    if [ -n "$HEROKU_APP_NAME" ]; then
+        export OTEL_SERVICE_NAME="${HEROKU_APP_NAME}"
+    else
+        export OTEL_SERVICE_NAME="heroku"
+    fi
 fi
 
 echo "Starting mw-agent in the background..." 
