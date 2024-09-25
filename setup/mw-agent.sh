@@ -23,7 +23,7 @@ if [ -z "$MW_FETCH_ACCOUNT_OTEL_CONFIG" ]; then
 fi
 
 if [ -n "$MW_DYNO_HOSTNAME" ] && [ "$MW_DYNO_HOSTNAME" == "true" ]; then
-    export OTEL_RESOURCE_ATTRIBUTES="host.name=${HEROKU_APP_NAME}.${DYNO}"
+    export OTEL_RESOURCE_ATTRIBUTES="host.name=${HEROKU_APP_NAME}.${DYNO},project.name=heroku"
 fi
 
 if [ -z "$MW_LOGFILE" ]; then
