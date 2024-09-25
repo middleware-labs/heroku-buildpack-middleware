@@ -42,5 +42,7 @@ if [ -z "$OTEL_SERVICE_NAME" ]; then
     fi
 fi
 
+export MW_API_KEY=$MW_API_KEY
+export MW_TARGET=$MW_TARGET
 echo "Starting mw-agent in the background..." 
 nohup $MW_AGENT_DIR/mw-agent start --otel-config-file=$MW_AGENT_DIR/otel-config.yaml --logfile $MW_LOGFILE &
