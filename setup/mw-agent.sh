@@ -18,10 +18,6 @@ if [ "$MW_DYNO_DISABLE_AGENT" == "true" ]; then
 fi
 
 MW_AGENT_DIR="$HOME/mw-agent"
-if [ -z "$MW_FETCH_ACCOUNT_OTEL_CONFIG" ]; then
-    export MW_FETCH_ACCOUNT_OTEL_CONFIG=false
-fi
-
 if [ -n "$MW_DYNO_HOSTNAME" ] && [ "$MW_DYNO_HOSTNAME" == "true" ]; then
     export OTEL_RESOURCE_ATTRIBUTES="host.name=${HEROKU_APP_NAME}.${DYNO}"
 fi
